@@ -1,0 +1,26 @@
+{
+  "name": "Plan Treningowy 3.0",
+  "short_name": "Trening",
+  "description": "Plan treningowy: 3 dni siłowe + 2 dni biegowe, historia i pomiary.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f3f4f6",
+  "theme_color": "#111827",
+  "lang": "pl",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

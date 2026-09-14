@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#111827"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="icon-192.png"><title>Plan Treningowy 2.0</title>
+<style>
+:root{font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:#111827;background:#f3f4f6}
+*{box-sizing:border-box}body{margin:0;padding-bottom:78px}.app{max-width:800px;margin:auto}
+header{background:#111827;color:white;padding:17px 16px;position:sticky;top:0;z-index:8}
+h1{font-size:21px;margin:0}.sub{font-size:12px;opacity:.75;margin-top:3px}
+nav{display:flex;gap:6px;overflow:auto;background:#fff;padding:9px 12px;position:sticky;top:70px;z-index:7}
+nav button{border:0;border-radius:999px;padding:9px 13px;background:#e5e7eb;font-weight:750;white-space:nowrap}
+nav button.active{background:#111827;color:white}
+main{padding:12px}.card{background:#fff;border-radius:16px;padding:15px;margin-bottom:12px;box-shadow:0 2px 9px #0000000b}
+h2{font-size:18px;margin:0 0 10px}.muted{color:#6b7280;font-size:13px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.stat{background:#f9fafb;border-radius:12px;padding:12px}.stat b{font-size:20px;display:block}
+.exercise{border:1px solid #e5e7eb;border-radius:13px;padding:11px;margin:9px 0}.exhead{display:flex;justify-content:space-between;gap:8px}.exname{font-weight:750}
+.set{display:grid;grid-template-columns:32px 1fr 1fr 36px;gap:6px;align-items:center;margin:6px 0}.set span{text-align:center;color:#6b7280;font-weight:700}
+input,select{width:100%;padding:9px;border:1px solid #d1d5db;border-radius:9px;font-size:15px;background:white}
+input[type=checkbox]{width:21px;height:21px}.btn{border:1px solid #d1d5db;background:white;border-radius:10px;padding:9px 12px;font-weight:700}.primary{background:#111827;color:#fff;border-color:#111827}
+.row{display:flex;gap:7px;flex-wrap:wrap}.progress{height:9px;background:#e5e7eb;border-radius:99px;overflow:hidden}.bar{height:100%;background:#111827;width:0}
+.history{border-top:1px solid #e5e7eb;padding:11px 0}.history:first-child{border-top:0}.badge{display:inline-block;border-radius:999px;padding:4px 8px;background:#e5e7eb;font-size:12px;font-weight:700}
+footer{position:fixed;bottom:0;left:0;right:0;background:white;border-top:1px solid #e5e7eb;padding:9px 12px;z-index:10}.foot{max-width:800px;margin:auto;display:flex;gap:7px}.foot button{flex:1}
+.timer{font-size:29px;font-weight:800;text-align:center;margin:8px}
+.small{font-size:12px}.danger{color:#b91c1c}
+</style></head>
+<body><div class="app">
+<header><h1>🏋️ Plan Treningowy 3.0</h1><div class="sub">Trening • historia • progres • waga i pas</div></header>
+<nav id="nav"></nav><main id="main"></main>
+</div><footer><div class="foot"><button class="btn" onclick="timer()">⏱ 90 s</button><button class="btn primary" onclick="finish()">✓ Zakończ trening</button></div></footer>
+<div id="installBox" style="display:none;background:#111827;color:white;padding:12px 14px;margin:10px 12px;border-radius:14px">
+<b>📲 Zainstaluj aplikację</b><div style="font-size:13px;opacity:.85;margin:4px 0 9px">Dodaj Plan Treningowy do ekranu głównego.</div>
+<button class="btn" id="installBtn">Zainstaluj</button>
+</div>
+<script>
+const days=[
+{id:"pon",label:"Pon",title:"Siła A",focus:"Całe ciało • klatka + nogi",type:"siła",ex:[["Goblet squat",4,"8–12"],["Wyciskanie hantli na ławce płaskiej",4,"8–12"],["Wiosłowanie na wyciągu",4,"8–12"],["RDL z hantlami",3,"8–12"],["Unoszenie hantli bokiem",3,"12–15"],["Triceps na wyciągu",3,"10–15"],["Biceps z hantlami",3,"10–15"],["Plank",3,"45–60 s"]]},
+{id:"wt",label:"Wt",title:"Bieg 1",focus:"Interwały • 35–40 min",type:"bieg"},
+{id:"sr",label:"Śr",title:"Siła B",focus:"Plecy + barki + nogi",type:"siła",ex:[["Bułgarskie przysiady",3,"8–12 / noga"],["Wyciskanie hantli siedząc",3,"8–12"],["Ściąganie drążka wyciągu górnego",4,"8–12"],["Hip thrust z hantlem",3,"10–15"],["Rozpiętki na bramie",3,"10–15"],["Face pull",3,"12–15"],["Biceps na wyciągu",3,"10–15"],["Pallof press",3,"10–15 / strona"]]},
+{id:"pt",label:"Pt",title:"Siła C",focus:"Całe ciało • sylwetka",type:"siła",ex:[["Wykroki z hantlami",3,"10–12 / noga"],["Wyciskanie hantli na ławce skośnej",4,"8–12"],["Wiosłowanie jednorącz hantlem",4,"8–12"],["RDL z hantlami",3,"8–12"],["Unoszenie hantli bokiem",4,"12–20"],["Face pull",3,"12–15"],["Biceps",3,"10–15"],["Triceps na wyciągu",3,"10–15"],["Unoszenie nóg",3,"10–15"]]},
+{id:"sob",label:"Sob",title:"Bieg 2",focus:"Spokojny bieg • 40–55 min",type:"bieg"}];
+let state=JSON.parse(localStorage.getItem("pt20")||'{"selected":"pon","draft":{},"history":[],"body":[]}');
+function save(){localStorage.setItem("pt20",JSON.stringify(state))}
+function tabs(){nav.innerHTML=days.map(d=>`<button class="${d.id===state.selected?'active':''}" onclick="sel('${d.id}')">${d.label}</button>`).join("")+`<button class="${state.selected==='hist'?'active':''}" onclick="sel('hist')">📈 Historia</button><button class="${state.selected==='body'?'active':''}" onclick="sel('body')">⚖️ Pomiary</button>`}
+function sel(x){state.selected=x;save();tabs();render()}
+function render(){if(state.selected==='hist')return history();if(state.selected==='body')return body();let d=days.find(x=>x.id===state.selected);let data=state.draft[d.id]||{};let h=`<div class="card"><h2>${d.title}</h2><div class="muted">${d.focus}</div>`;
+if(d.type==='siła'){let total=d.ex.reduce((a,e)=>a+e[1],0),done=countDone(d,data);h+=`<div style="margin-top:13px"><div class="muted">Postęp: ${done}/${total} serii</div><div class="progress"><div class="bar" style="width:${done/total*100}%"></div></div></div></div>`;
+d.ex.forEach((e,ei)=>{h+=`<div class="card exercise"><div class="exhead"><div class="exname">${ei+1}. ${e[0]}</div><div class="muted">${e[2]}</div></div>`;
+for(let i=0;i<e[1];i++){let s=data[ei]?.[i]||{};h+=`<div class="set"><span>${i+1}</span><input placeholder="kg" inputmode="decimal" value="${s.kg||''}" onchange="upd(${ei},${i},'kg',this.value)"><input placeholder="powt." inputmode="numeric" value="${s.reps||''}" onchange="upd(${ei},${i},'reps',this.value)"><input type="checkbox" ${s.done?'checked':''} onchange="upd(${ei},${i},'done',this.checked)"></div>`}h+=`</div>`})}
+else {h+=`</div><div class="card"><h2>Plan biegu</h2>${d.id==='wt'?'<p><b>Rozgrzewka:</b> 10 min.</p><p><b>6 ×:</b> 2 min szybkiego biegu (7–8/10) + 2 min spokojnie.</p><p><b>Schłodzenie:</b> 5–10 min marszu.</p>':'<p><b>40–55 min</b> spokojnego biegu. Tempo konwersacyjne.</p><p class="muted">Jeśli trzeba: 8 min biegu + 1 min marszu × 5.</p>'}<label style="display:flex;gap:10px;align-items:center"><input type="checkbox" ${data.done?'checked':''} onchange="runDone(this.checked)"> Wykonane</label></div>`}
+h+=`<div class="card"><b>RIR 1–3</b><div class="muted" style="margin-top:5px">Kończ większość serii z zapasem 1–3 powtórzeń. Gdy osiągniesz górę zakresu we wszystkich seriach, zwiększ ciężar.</div></div>`;main.innerHTML=h}
+function countDone(d,data){let n=0;d.ex.forEach((e,ei)=>{for(let i=0;i<e[1];i++)if(data[ei]?.[i]?.done)n++});return n}
+function upd(ei,si,k,v){let id=state.selected;state.draft[id]??={};state.draft[id][ei]??=[];state.draft[id][ei][si]??={};state.draft[id][ei][si][k]=v;save();render()}
+function runDone(v){state.draft[state.selected]??={};state.draft[state.selected].done=v;save()}
+function finish(){let d=days.find(x=>x.id===state.selected);if(!d)return;let data=state.draft[d.id]||{};let done=d.type==='siła'?countDone(d,data)>0:data.done;if(!done){alert('Zaznacz przynajmniej jedną serię lub „Wykonane”.');return}let rec={date:new Date().toISOString(),day:d.title,type:d.type,data:JSON.parse(JSON.stringify(data))};state.history.unshift(rec);state.draft[d.id]={};save();alert('Trening zapisany w historii!');render()}
+function history(){let h=`<div class="card"><h2>📈 Historia treningów</h2><div class="grid"><div class="stat"><span class="muted">Treningi</span><b>${state.history.length}</b></div><div class="stat"><span class="muted">Ostatni</span><b>${state.history[0]?new Date(state.history[0].date).toLocaleDateString('pl-PL'):'—'}</b></div></div></div>`;
+if(!state.history.length)h+=`<div class="card muted">Nie ma jeszcze zapisanych treningów. Po treningu kliknij „Zakończ trening”.</div>`;
+state.history.forEach((r,i)=>{let detail='';if(r.type==='siła'){let vol=0,sets=0;Object.values(r.data).forEach(arr=>{if(Array.isArray(arr))arr.forEach(s=>{if(s?.done){sets++;vol+=(parseFloat(s.kg)||0)*(parseFloat(s.reps)||0)}})});detail=`${sets} ukończonych serii • ${vol?Math.round(vol).toLocaleString('pl-PL')+' kg objętości':''}`}else detail='Bieg ukończony';h+=`<div class="card history"><b>${r.day}</b> <span class="badge">${new Date(r.date).toLocaleDateString('pl-PL')}</span><div class="muted" style="margin-top:6px">${detail}</div><button class="btn small danger" style="margin-top:8px" onclick="del(${i})">Usuń</button></div>`});main.innerHTML=h}
+function del(i){if(confirm('Usunąć ten wpis?')){state.history.splice(i,1);save();history()}}
+function body(){let h=`<div class="card"><h2>⚖️ Pomiary</h2><p class="muted">Wpisuj pomiary raz w tygodniu, najlepiej rano.</p><div class="grid"><input id="bw" placeholder="Waga (kg)" inputmode="decimal"><input id="wa" placeholder="Pas (cm)" inputmode="decimal"></div><button class="btn primary" style="margin-top:9px" onclick="addBody()">Dodaj pomiar</button></div>`;
+h+=`<div class="card"><h2>Ostatnie pomiary</h2>`+(state.body.length?state.body.map((x,i)=>`<div class="history"><b>${x.weight} kg</b> • pas ${x.waist||'—'} cm <span class="muted">• ${new Date(x.date).toLocaleDateString('pl-PL')}</span></div>`).join(""):'<div class="muted">Brak pomiarów.</div>')+`</div>`;main.innerHTML=h}
+function addBody(){let w=parseFloat(bw.value),waist=wa.value.trim();if(!w){alert('Podaj wagę.');return}state.body.unshift({date:new Date().toISOString(),weight:w,waist});save();body()}
+let ti;function timer(){clearInterval(ti);let end=Date.now()+90000;let b=document.querySelector('footer .primary');ti=setInterval(()=>{let s=Math.max(0,Math.ceil((end-Date.now())/1000));b.textContent=s?`⏱ ${s}s`:'✓ Gotowe';if(!s)clearInterval(ti)},200)}
+let deferredPrompt=null;
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredPrompt=e;document.getElementById('installBox').style.display='block'});
+document.getElementById('installBtn').onclick=async()=>{if(!deferredPrompt)return;deferredPrompt.prompt();await deferredPrompt.userChoice;deferredPrompt=null;document.getElementById('installBox').style.display='none'};
+window.addEventListener('appinstalled',()=>{document.getElementById('installBox').style.display='none'});
+if('serviceWorker' in navigator) window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js'));
+tabs();render();
+</script></body></html>
